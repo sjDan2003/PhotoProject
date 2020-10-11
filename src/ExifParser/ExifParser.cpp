@@ -1,6 +1,6 @@
 #include "ExifParser.hpp"
-#include <fstream> // For ifstream
-#include <iostream>
+#include <fstream>  // For ifstream
+#include <iostream> // For cout
 
 cExifParser::cExifParser()
 {
