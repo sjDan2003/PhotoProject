@@ -1,7 +1,7 @@
 #include <iostream>
 #include "ExifParser/ExifParser.hpp"
 
-int main() 
+int main()
 {
-    cExifParser NewParser("../DSLR.jpg");
+    cExifParser NewParser("../DSC06499.jpg");
 }
