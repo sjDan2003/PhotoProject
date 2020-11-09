@@ -2,12 +2,43 @@
 #include <fstream>  // For ifstream
 #include <iostream> // For cout
 
-cExifParser::cExifParser()
+const bool cAppBase::DoesAppMarkerExist(const std::vector<unsigned char>::iterator &ReadBufferIter, const unsigned char MarkerNumber)
+{
+    if ((*ReadBufferIter == 0xFF) && (*(ReadBufferIter + 1) == MarkerNumber))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+const unsigned int cApp0::ParseApp(const std::vector<unsigned char>::iterator &ReadBufferIter)
+{
+    unsigned int TotalBytesRead = (*ReadBufferIter << 8) + *(ReadBufferIter + 1);
+    std::cout << "App0 length in bytes is " << TotalBytesRead << "\n";
+    // The next four bytes should be JFIF0
+
+    return TotalBytesRead;
+}
+
+const unsigned int cApp1::ParseApp(const std::vector<unsigned char>::iterator &ReadBufferIter)
+{
+    unsigned int TotalBytesRead = (*ReadBufferIter << 8) + *(ReadBufferIter + 1);
+    std::cout << "App1 length in bytes is " << TotalBytesRead << "\n";
+
+
+
+    return TotalBytesRead;
+}
+
+cExifParser::cExifParser() : App0(), App1()
 {
 
 }
 
-cExifParser::cExifParser(const std::string ImageFileName)
+cExifParser::cExifParser(const std::string ImageFileName) : App0(), App1()
 {
     ParseExifData(ImageFileName);
 }
@@ -29,44 +60,6 @@ const bool cExifParser::DoesStartOfImageExist(const std::vector<unsigned char>::
     }
 }
 
-const bool cExifParser::DoesApp0MarkerExist(const std::vector<unsigned char>::iterator &ReadBufferIter)
-{
-    if ((*ReadBufferIter == 0xFF) && (*(ReadBufferIter + 1) == 0xE0))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-const unsigned int cExifParser::ParseApp0(const std::vector<unsigned char>::iterator &ReadBufferIter)
-{
-    unsigned int TotalBytesRead = (*ReadBufferIter << 8) + *(ReadBufferIter + 1);
-    std::cout << "App0 length in bytes is " << TotalBytesRead << "\n";
-    return TotalBytesRead;
-}
-
-const bool cExifParser::DoesApp1MarkerExist(const std::vector<unsigned char>::iterator &ReadBufferIter)
-{
-    if ((*ReadBufferIter == 0xFF) && (*(ReadBufferIter + 1) == 0xE1))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-const unsigned int cExifParser::ParseApp1(const std::vector<unsigned char>::iterator &ReadBufferIter)
-{
-    unsigned int TotalBytesRead = (*ReadBufferIter << 8) + *(ReadBufferIter + 1);
-    std::cout << "App1 length in bytes is " << TotalBytesRead << "\n";
-    return TotalBytesRead;
-}
-
 void cExifParser::ParseExifData(const std::string ImageFileName)
 {
     std::ifstream ImageFileStream(ImageFileName.c_str(), std::ifstream::binary);
@@ -80,18 +73,18 @@ void cExifParser::ParseExifData(const std::string ImageFileName)
         {
             std::cout << "Found valid SOI marker\n";
             std::advance(ExifIter, MARKER_LENGTH_BYTES);
-            if (DoesApp0MarkerExist(ExifIter))
+            if (App0.DoesAppMarkerExist(ExifIter, cApp0::MARKER_NUMBER))
             {
                 std::cout << "Found APP0\n";
                 std::advance(ExifIter, MARKER_LENGTH_BYTES);
-                const unsigned int BytesRead = ParseApp0(ExifIter);
+                const unsigned int BytesRead = App0.ParseApp(ExifIter);
                 std::advance(ExifIter, BytesRead);
             }
-            if (DoesApp1MarkerExist(ExifIter))
+            if (App1.DoesAppMarkerExist(ExifIter, cApp1::MARKER_NUMBER))
             {
                 std::cout << "Found APP1\n";
                 std::advance(ExifIter, MARKER_LENGTH_BYTES);
-                const unsigned int BytesRead = ParseApp1(ExifIter);
+                const unsigned int BytesRead = App1.ParseApp(ExifIter);
                 std::advance(ExifIter, BytesRead);
             }
         }
