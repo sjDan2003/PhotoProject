@@ -54,9 +54,9 @@ private:
     const bool DoesStartOfImageExist(const std::vector<unsigned char>::iterator &ReadBufferIter);
 
 public:
-    cExifParser();
+    cExifParser() : App0(), App1() {};
     cExifParser(const std::string ImageFileName);
-    ~cExifParser();
+    ~cExifParser() {};
 
     void ParseExifData(const std::string ImageFileName);
 

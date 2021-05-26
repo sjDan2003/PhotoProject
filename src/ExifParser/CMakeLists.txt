@@ -1,1 +1,5 @@
-add_library(ExifParser ExifParser.cpp)
+add_library(
+    ExifParser 
+    ExifParser.cpp
+    ExifParser.hpp
+    )

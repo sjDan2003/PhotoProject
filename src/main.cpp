@@ -3,5 +3,5 @@
 
 int main()
 {
-    cExifParser NewParser("../DSC06499.jpg");
+    cExifParser NewParser("DSC00667.jpg");
 }

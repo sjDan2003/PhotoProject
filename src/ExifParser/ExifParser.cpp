@@ -28,24 +28,12 @@ const unsigned int cApp1::ParseApp(const std::vector<unsigned char>::iterator &R
     unsigned int TotalBytesRead = (*ReadBufferIter << 8) + *(ReadBufferIter + 1);
     std::cout << "App1 length in bytes is " << TotalBytesRead << "\n";
 
-
-
     return TotalBytesRead;
-}
-
-cExifParser::cExifParser() : App0(), App1()
-{
-
 }
 
 cExifParser::cExifParser(const std::string ImageFileName) : App0(), App1()
 {
     ParseExifData(ImageFileName);
-}
-
-cExifParser::~cExifParser()
-{
-
 }
 
 const bool cExifParser::DoesStartOfImageExist(const std::vector<unsigned char>::iterator &ReadBufferIter)
@@ -62,7 +50,7 @@ const bool cExifParser::DoesStartOfImageExist(const std::vector<unsigned char>::
 
 void cExifParser::ParseExifData(const std::string ImageFileName)
 {
-    std::ifstream ImageFileStream(ImageFileName.c_str(), std::ifstream::binary);
+    std::ifstream ImageFileStream(ImageFileName, std::ifstream::binary);
 
     if (ImageFileStream.is_open())
     {
@@ -97,7 +85,7 @@ void cExifParser::ParseExifData(const std::string ImageFileName)
     }
     else
     {
-        std::cout<<"Could not find image\n";
+        std::cout << "Could not find image\n";
     }
 
 }
