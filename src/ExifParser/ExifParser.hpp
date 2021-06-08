@@ -1,6 +1,9 @@
-//
-//
-//
+/**
+* @file ExifParser.hpp
+* @brief Header file for the ExifParser library
+* @author Daniel Fettke
+* @date 6-5-2021
+*/
 
 #include <string>
 #include <vector>
@@ -8,11 +11,16 @@
 class cAppBase
 {
 protected:
+    bool mLittleEndian;
 public:
-    cAppBase() {};
+    cAppBase() : mLittleEndian(true) {};
     ~cAppBase() {};
 
     const bool DoesAppMarkerExist(const std::vector<unsigned char>::iterator &ReadBufferIter, const unsigned char MarkerNumber);
+    const unsigned short ConvertEndian16(const unsigned short Value);
+    const unsigned int   ConvertEndian32(const unsigned int   Value);
+    const unsigned short ReadTwoBytes(const std::vector<unsigned char>::iterator &ReadBufferIter);
+    const unsigned int   ReadFourBytes(const std::vector<unsigned char>::iterator &ReadBufferIter);
     virtual const unsigned int ParseApp(const std::vector<unsigned char>::iterator &ReadBufferIter) = 0;
 };
 
@@ -29,6 +37,14 @@ public:
 class cApp1 : public cAppBase
 {
 private:
+    // Lengths to advance the iterator by
+    static constexpr unsigned char APP_DATA_SIZE_LENGTH = 2;
+    static constexpr unsigned char ENDIAN_LENGTH        = 2;
+
+    // Other constants
+    static constexpr unsigned char LITTLE_ENDIAN_TAG = 0x49;
+    static constexpr unsigned char BIG_ENDIAN_TAG    = 0x4D;
+
 public:
 
     static const unsigned char MARKER_NUMBER = 0xE1;
