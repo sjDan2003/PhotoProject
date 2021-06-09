@@ -37,6 +37,14 @@ public:
 class cApp1 : public cAppBase
 {
 private:
+
+    struct IfdStruct
+    {
+        unsigned short Tag;    //< The type of information to read. See 4.6.4
+        unsigned short Type;   //< The type of data to read. See 4.6.2
+        unsigned int   Count;  //< The number of values to read
+        unsigned int   Offset; //< The offset of the data to read from the start of the header
+    };
     // Lengths to advance the iterator by
     static constexpr unsigned char APP_DATA_SIZE_LENGTH = 2;
     static constexpr unsigned char ENDIAN_LENGTH        = 2;

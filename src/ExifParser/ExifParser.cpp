@@ -145,16 +145,27 @@ const unsigned int cApp1::ParseApp(const std::vector<unsigned char>::iterator &R
     std::cout << "Offset to IFD is " << IfdOffset << " bytes" << std::endl;
     std::advance(App1Iter, 4);
 
-    // Read the 0th IFD
-    const unsigned short IfdTag = ReadTwoBytes(App1Iter);
+    // The next two bytes are the number of IFDs
+    const unsigned short NumOfIFDs = ReadTwoBytes(App1Iter);
+    std::cout << "Number of IFDs " << NumOfIFDs << std::endl;
     std::advance(App1Iter, 2);
-    const unsigned short IfdType = ReadTwoBytes(App1Iter);
-    std::advance(App1Iter, 2);
-    const unsigned int IfdCount = ReadFourBytes(App1Iter);
-    std::advance(App1Iter, 4);
-    const unsigned int IfdValueOffset = ReadFourBytes(App1Iter);
-    std::advance(App1Iter, 4);
-    std::cout << std::hex << std::uppercase << "IFD tag " << IfdTag << " Type " << IfdType << " Count " << IfdCount << " Value Offset " << IfdValueOffset << std::endl;
+
+    std::vector<IfdStruct> IfdList(NumOfIFDs);
+    for (IfdStruct &CurrIfd : IfdList)
+    {
+        CurrIfd.Tag = ReadTwoBytes(App1Iter);
+        std::advance(App1Iter, 2);
+        CurrIfd.Type = ReadTwoBytes(App1Iter);
+        std::advance(App1Iter, 2);
+        CurrIfd.Count = ReadFourBytes(App1Iter);
+        std::advance(App1Iter, 4);
+        CurrIfd.Offset = ReadFourBytes(App1Iter);
+        std::advance(App1Iter, 4);
+        std::cout << std::hex << std::uppercase << "IFD tag "       << CurrIfd.Tag << 
+                                                   " Type "         << CurrIfd.Type << 
+                                                   " Count "        << CurrIfd.Count << 
+                                                   " Value Offset " << CurrIfd.Offset << std::endl;
+    }
 
 
     return TotalBytesRead;
