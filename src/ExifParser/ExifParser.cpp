@@ -167,7 +167,6 @@ const unsigned int cApp1::ParseApp(const std::vector<unsigned char>::iterator &R
                                                    " Value Offset " << CurrIfd.Offset << std::endl;
     }
 
-
     return TotalBytesRead;
 }
 

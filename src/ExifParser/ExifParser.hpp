@@ -34,10 +34,16 @@ public:
     const unsigned int ParseApp(const std::vector<unsigned char>::iterator &ReadBufferIter);
 };
 
+/**
+ * @brief App1 Class used to parse IFDs
+ */ 
 class cApp1 : public cAppBase
 {
 private:
 
+    /**
+     * @brief Structure to organize IFD data
+     */
     struct IfdStruct
     {
         unsigned short Tag;    //< The type of information to read. See 4.6.4
@@ -83,5 +89,4 @@ public:
     ~cExifParser() {};
 
     void ParseExifData(const std::string ImageFileName);
-
 };
