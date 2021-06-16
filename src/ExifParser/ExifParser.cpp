@@ -8,6 +8,10 @@
 #include "ExifParser.hpp"
 #include <fstream>  // For ifstream
 #include <iostream> // For cout
+#include <string>   // For std::string
+#include <iomanip>  // For resetiosflags
+#include <cstdio>   // For sscanf
+#include <ctime>    // For tm struct
 
 /**
  * @brief Determines if the App Marker Exists
@@ -89,6 +93,63 @@ const unsigned int cApp0::ParseApp(const std::vector<unsigned char>::iterator &R
     return TotalBytesRead;
 }
 
+void cApp1::GetEndianess(const std::vector<unsigned char>::iterator &App1Iter)
+{
+    unsigned char EndianValue[ENDIAN_LENGTH];
+    EndianValue[0] = *App1Iter;
+    EndianValue[1] = *(App1Iter + 1);
+    if ((EndianValue[0] == LITTLE_ENDIAN_TAG) && (EndianValue[1] == LITTLE_ENDIAN_TAG))
+    {
+        std::cout << "Little Endian" << std::endl;
+        mLittleEndian = true;
+    }
+    else if ((EndianValue[0] == BIG_ENDIAN_TAG) && (EndianValue[1] == BIG_ENDIAN_TAG))
+    {
+        std::cout << "Big Endian" << std::endl;
+        mLittleEndian = false;
+    }
+    else
+    {
+        std::cout << "Invalid Endian marker\n" << std::endl;
+    }
+}
+
+void cApp1::GetIfdList(std::vector<unsigned char>::iterator &App1Iter)
+{
+    for (IfdStruct &CurrIfd : mIfdList)
+    {
+        CurrIfd.Tag = ReadTwoBytes(App1Iter);
+        std::advance(App1Iter, 2);
+        CurrIfd.Type = ReadTwoBytes(App1Iter);
+        std::advance(App1Iter, 2);
+        CurrIfd.Count = ReadFourBytes(App1Iter);
+        std::advance(App1Iter, 4);
+        CurrIfd.Offset = ReadFourBytes(App1Iter);
+        std::advance(App1Iter, 4);
+        std::cout << std::hex << std::uppercase << "IFD tag "       << CurrIfd.Tag << 
+                                                   " Type "         << CurrIfd.Type << 
+                                                   " Count "        << CurrIfd.Count << 
+                                                   " Value Offset " << CurrIfd.Offset << std::endl;
+    }
+}
+
+void cApp1::GetDateTime(std::vector<unsigned char>::iterator &App1Iter, unsigned int Count)
+{
+    std::string DateTimeStr;
+    char DateTimeChar;
+    for (unsigned int Offset = 0; Offset < Count; ++Offset)
+    {
+        DateTimeChar = static_cast<char>(*(App1Iter + Offset));
+        DateTimeStr.push_back(DateTimeChar);
+    }
+    sscanf(DateTimeStr.c_str(), "%d:%d:%d %d:%d:%d", &mDateTime.tm_year, &mDateTime.tm_mon, &mDateTime.tm_mday,
+                                                     &mDateTime.tm_hour, &mDateTime.tm_min, &mDateTime.tm_sec);
+    --mDateTime.tm_mon; // EXIF month is ones based, but struct tm expects zero based.
+                            // Convert the EXIF month to zero based.
+    mDateTime.tm_year -= 1900; // tm_year expects the number of years since 1900, but EXIF data is years since 0 AD
+    std::cout << "Stored date time as " << asctime(&mDateTime) << std::endl;
+}
+
 /**
  * @brief Parses information for App1 data
  * 
@@ -109,24 +170,11 @@ const unsigned int cApp1::ParseApp(const std::vector<unsigned char>::iterator &R
     // TODO: Ensure the next six bytes equals EXIF plus 2 spaces
     std::advance(App1Iter, 6);
 
+    const unsigned int HeaderOffsetStart = App1Iter - mStartOfFileIter;
+    std::cout << "Header offset start " << std::hex << HeaderOffsetStart << std::endl;
+
     // Determine the endianness of the data.
-    unsigned char EndianValue[ENDIAN_LENGTH];
-    EndianValue[0] = *App1Iter;
-    EndianValue[1] = *(App1Iter + 1);
-    if ((EndianValue[0] == LITTLE_ENDIAN_TAG) && (EndianValue[1] == LITTLE_ENDIAN_TAG))
-    {
-        std::cout << "Little Endian" << std::endl;
-        mLittleEndian = true;
-    }
-    else if ((EndianValue[0] == BIG_ENDIAN_TAG) && (EndianValue[1] == BIG_ENDIAN_TAG))
-    {
-        std::cout << "Big Endian" << std::endl;
-        mLittleEndian = false;
-    }
-    else
-    {
-        std::cout << "Invalid Endian marker\n" << std::endl;
-    }
+    GetEndianess(App1Iter);
     std::advance(App1Iter, ENDIAN_LENGTH);
 
     // The next two bytes should be 0x002A
@@ -147,24 +195,29 @@ const unsigned int cApp1::ParseApp(const std::vector<unsigned char>::iterator &R
 
     // The next two bytes are the number of IFDs
     const unsigned short NumOfIFDs = ReadTwoBytes(App1Iter);
-    std::cout << "Number of IFDs " << NumOfIFDs << std::endl;
+    std::cout << "Number of IFDs " << std::dec << NumOfIFDs << std::endl;
     std::advance(App1Iter, 2);
 
-    std::vector<IfdStruct> IfdList(NumOfIFDs);
-    for (IfdStruct &CurrIfd : IfdList)
+    mIfdList.resize(NumOfIFDs);
+    GetIfdList(App1Iter);
+
+    for (const IfdStruct &CurrIfd : mIfdList)
     {
-        CurrIfd.Tag = ReadTwoBytes(App1Iter);
-        std::advance(App1Iter, 2);
-        CurrIfd.Type = ReadTwoBytes(App1Iter);
-        std::advance(App1Iter, 2);
-        CurrIfd.Count = ReadFourBytes(App1Iter);
-        std::advance(App1Iter, 4);
-        CurrIfd.Offset = ReadFourBytes(App1Iter);
-        std::advance(App1Iter, 4);
-        std::cout << std::hex << std::uppercase << "IFD tag "       << CurrIfd.Tag << 
-                                                   " Type "         << CurrIfd.Type << 
-                                                   " Count "        << CurrIfd.Count << 
-                                                   " Value Offset " << CurrIfd.Offset << std::endl;
+        std::cout << std::resetiosflags(std::ios_base::basefield);
+        const unsigned int OffsetToData = HeaderOffsetStart + CurrIfd.Offset;
+        std::vector<unsigned char>::iterator StartOfDataIter = mStartOfFileIter + OffsetToData;
+        switch (CurrIfd.Tag)
+        {
+            case IFD_DATE_TIME:
+            {
+                GetDateTime(StartOfDataIter, CurrIfd.Count);
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
     }
 
     return TotalBytesRead;
@@ -211,6 +264,7 @@ void cExifParser::ParseExifData(const std::string ImageFileName)
             {
                 std::cout << "Found APP1\n";
                 std::advance(ExifIter, MARKER_LENGTH_BYTES);
+                App1.SetStartOfFile(ReadBuffer.begin());
                 const unsigned int BytesRead = App1.ParseApp(ExifIter);
                 std::advance(ExifIter, BytesRead);
             }

@@ -46,24 +46,39 @@ private:
      */
     struct IfdStruct
     {
-        unsigned short Tag;    //< The type of information to read. See 4.6.4
-        unsigned short Type;   //< The type of data to read. See 4.6.2
-        unsigned int   Count;  //< The number of values to read
-        unsigned int   Offset; //< The offset of the data to read from the start of the header
+        unsigned short Tag;    ///< The type of information to read. See 4.6.4
+        unsigned short Type;   ///< The type of data to read. See 4.6.2
+        unsigned int   Count;  ///< The number of values to read
+        unsigned int   Offset; ///< The offset of the data to read from the start of the header
     };
     // Lengths to advance the iterator by
     static constexpr unsigned char APP_DATA_SIZE_LENGTH = 2;
     static constexpr unsigned char ENDIAN_LENGTH        = 2;
 
+    // IFD tags
+    static constexpr unsigned short IFD_DATE_TIME = 0x0132;
+
     // Other constants
     static constexpr unsigned char LITTLE_ENDIAN_TAG = 0x49;
     static constexpr unsigned char BIG_ENDIAN_TAG    = 0x4D;
+
+    std::vector<IfdStruct> mIfdList;
+    std::vector<unsigned char>::iterator mStartOfFileIter;
+    tm mDateTime;
+
+    void GetEndianess(const std::vector<unsigned char>::iterator &App1Iter);
+    void GetIfdList(std::vector<unsigned char>::iterator &App1Iter);
+    void GetDateTime(std::vector<unsigned char>::iterator &App1Iter, unsigned int Count);
 
 public:
 
     static const unsigned char MARKER_NUMBER = 0xE1;
 
+    cApp1() : mIfdList(), mStartOfFileIter(), mDateTime() {};
+    ~cApp1() {}
+
     const unsigned int ParseApp(const std::vector<unsigned char>::iterator &ReadBufferIter);
+    void SetStartOfFile(const std::vector<unsigned char>::iterator &StartOfFileIter) {mStartOfFileIter = StartOfFileIter;}
 };
 
 class cExifParser
