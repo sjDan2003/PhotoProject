@@ -93,6 +93,15 @@ const unsigned int cApp0::ParseApp(const std::vector<unsigned char>::iterator &R
     return TotalBytesRead;
 }
 
+/**
+ * @brief Determines the endianess based on the EXIF header data
+ * 
+ * @pre App1Iter starts at the beginning of the endianess datat
+ * 
+ * @param[in] App1Iter Iterator to the EXIF data
+ * 
+ * @return None
+ */
 void cApp1::GetEndianess(const std::vector<unsigned char>::iterator &App1Iter)
 {
     unsigned char EndianValue[ENDIAN_LENGTH];
@@ -114,6 +123,15 @@ void cApp1::GetEndianess(const std::vector<unsigned char>::iterator &App1Iter)
     }
 }
 
+/**
+ * @brief Parses all of the IFDs in the EXIF data
+ * 
+ * @pre App1Iter starts at the beginning of the IFD data
+ * 
+ * @param[in] App1Iter Iterator to the EXIF data
+ * 
+ * @return None
+ */
 void cApp1::GetIfdList(std::vector<unsigned char>::iterator &App1Iter)
 {
     for (IfdStruct &CurrIfd : mIfdList)
@@ -126,13 +144,19 @@ void cApp1::GetIfdList(std::vector<unsigned char>::iterator &App1Iter)
         std::advance(App1Iter, 4);
         CurrIfd.Offset = ReadFourBytes(App1Iter);
         std::advance(App1Iter, 4);
-        std::cout << std::hex << std::uppercase << "IFD tag "       << CurrIfd.Tag << 
-                                                   " Type "         << CurrIfd.Type << 
-                                                   " Count "        << CurrIfd.Count << 
-                                                   " Value Offset " << CurrIfd.Offset << std::endl;
     }
 }
 
+/**
+ * @brief Parses the date and time from the EXIF header
+ * 
+ * @pre App1Iter starts at the beginning of the time date information
+ * 
+ * @param[in] App1Iter Iterator to the EXIF data
+ * @param[in] Count The number of characters to parse
+ * 
+ * @return None
+ */
 void cApp1::GetDateTime(std::vector<unsigned char>::iterator &App1Iter, unsigned int Count)
 {
     std::string DateTimeStr;
@@ -145,9 +169,9 @@ void cApp1::GetDateTime(std::vector<unsigned char>::iterator &App1Iter, unsigned
     sscanf(DateTimeStr.c_str(), "%d:%d:%d %d:%d:%d", &mDateTime.tm_year, &mDateTime.tm_mon, &mDateTime.tm_mday,
                                                      &mDateTime.tm_hour, &mDateTime.tm_min, &mDateTime.tm_sec);
     --mDateTime.tm_mon; // EXIF month is ones based, but struct tm expects zero based.
-                            // Convert the EXIF month to zero based.
+                        // Convert the EXIF month to zero based.
     mDateTime.tm_year -= 1900; // tm_year expects the number of years since 1900, but EXIF data is years since 0 AD
-    std::cout << "Stored date time as " << asctime(&mDateTime) << std::endl;
+    std::cout << "Photo's date time is " << asctime(&mDateTime) << std::endl;
 }
 
 /**
