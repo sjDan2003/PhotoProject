@@ -29,22 +29,22 @@ class cApp0 : public cAppBase
 private:
 public:
 
-    static const unsigned char MARKER_NUMBER = 0xE0;
+    static constexpr unsigned char MARKER_NUMBER = 0xE0;
 
     const unsigned int ParseApp(const std::vector<unsigned char>::iterator &ReadBufferIter);
 };
 
 /**
  * @brief App1 Class used to parse IFDs
- */ 
+ */
 class cApp1 : public cAppBase
 {
 private:
 
     /**
-     * @brief Structure to organize IFD data
+     * @brief Structure to organize Tiff Tag information
      */
-    struct IfdStruct
+    struct TiffTagStruct
     {
         unsigned short Tag;    ///< The type of information to read. See 4.6.4
         unsigned short Type;   ///< The type of data to read. See 4.6.2
@@ -55,30 +55,33 @@ private:
     static constexpr unsigned char APP_DATA_SIZE_LENGTH = 2;
     static constexpr unsigned char ENDIAN_LENGTH        = 2;
 
-    // IFD tags
+    // Tiff tags
     static constexpr unsigned short IFD_DATE_TIME = 0x0132;
 
     // Other constants
     static constexpr unsigned char LITTLE_ENDIAN_TAG = 0x49;
     static constexpr unsigned char BIG_ENDIAN_TAG    = 0x4D;
 
-    std::vector<IfdStruct> mIfdList;
+    std::vector<TiffTagStruct> mIfdList;
     std::vector<unsigned char>::iterator mStartOfFileIter;
     tm mDateTime;
 
     void GetEndianess(const std::vector<unsigned char>::iterator &App1Iter);
-    void GetIfdList(std::vector<unsigned char>::iterator &App1Iter);
-    void GetDateTime(std::vector<unsigned char>::iterator &App1Iter, unsigned int Count);
+    void GetTiffTagList(std::vector<unsigned char>::iterator &App1Iter);
+    void GetTiffTagData(unsigned int HeaderOffsetStart);
+    void ParseDateTime(std::vector<unsigned char>::iterator &App1Iter, const unsigned int Count);
+    void ParseIfdData();
 
 public:
 
-    static const unsigned char MARKER_NUMBER = 0xE1;
+    static constexpr unsigned char MARKER_NUMBER = 0xE1;
 
     cApp1() : mIfdList(), mStartOfFileIter(), mDateTime() {};
     ~cApp1() {}
 
     const unsigned int ParseApp(const std::vector<unsigned char>::iterator &ReadBufferIter);
     void SetStartOfFile(const std::vector<unsigned char>::iterator &StartOfFileIter) {mStartOfFileIter = StartOfFileIter;}
+    const tm & GetDateTime() {return mDateTime;}
 };
 
 class cExifParser
@@ -104,4 +107,5 @@ public:
     ~cExifParser() {};
 
     void ParseExifData(const std::string ImageFileName);
+    const tm & GetDateTime() {return App1.GetDateTime();}
 };
