@@ -1,0 +1,7 @@
+---
+Checks:          'cppcoreguidelines-*,-cppcoreguidelines-pro-type-reinterpret-cast,performance-*,google-*,bugprone-*'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle:     none
+User:            sjdan2003

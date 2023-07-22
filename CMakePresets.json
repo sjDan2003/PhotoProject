@@ -1,0 +1,34 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "Configure",
+            "displayName": "Configure",
+            "description": "Using compilers: C = /usr/bin/gcc, CXX = /usr/bin/g++",
+            "binaryDir": "${sourceDir}/out/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/usr/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "Test",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "Configure"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Build",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "Configure"
+        }
+    ]
+}
